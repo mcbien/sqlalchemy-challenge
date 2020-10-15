@@ -41,7 +41,7 @@ def home():
         f"Precipitation >> /api/v1.0/precipitation<br/>"
         f"Stations >> /api/v1.0/stations<br/>"
         f"Tobs>> /api/v1.0/tobs<br/>"
-        f"/api/v1.0/start date yyyy-mm-dd<br/>"
+        f"/api/v1.0/start date/end_date     Note: Date format is YYY-MM-DD"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -60,12 +60,10 @@ def precipitation():
     measurement_data = []
     for dates in results:
         measurement_dict = {}
-        measurement_dict["date"] = dates.date
-        measurement_dict["prcp"] = dates.prcp
+        mesurement_dict[dates.date] = dates.prcp
+        # measurement_dict["date"] = dates.date
+        # measurement_dict["prcp"] = dates.prcp
         measurement_data.append(measurement_dict)
-
-    mesurement[row.date - row.prcp
-
 
     # Return the JSON representation of your dictionary
     return jsonify(measurement_data)
@@ -106,23 +104,22 @@ def tobs():
     session.close()
 
 
-
 @app.route("/api/v1.0/temps/<start>")
 @app.route("/api/v1.0/temps/<start>/<end>")
 
-def start(start_date=None, end_date=None)
+def start(start_date=None, end_date=None):
 
     ## open communication session with database
     session = Session(engine)
     
     # query measurement.date and measurement.prcp for last year
-    if end_input:
-        results - session.query(func.min(Measuremrnt.tobs).label("min", func.max(Measurement.tobs).label("max"), func.avg(Measurement.tobs).label("avg")/
-        .filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).all()
+    if end_date:
+        results = session.query(func.min(Measuremrnt.tobs).label("min"), func.max(Measurement.tobs).label("max"), func.avg(Measurement.tobs).label("avg")).\
+            filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).all()
     
     else:
-        results - session.query(func.min(Measuremrnt.tobs).label("min", func.max(Measurement.tobs).label("max"), func.avg(Measurement.tobs).label("avg")/
-        .filter(Measurement.date >= start_date).all()
+        results = session.query((func.min(Measuremrnt.tobs).label("min", func.max(Measurement.tobs).label("max"), func.avg(Measurement.tobs).label("avg")).\
+            filter(Measurement.date >= start_date).all()
 
     # close the session
     session.close()
@@ -130,11 +127,14 @@ def start(start_date=None, end_date=None)
     # for loop to pull results for dates provided
     temp_data = []
     for result in results:
-        temp_dict = {}
+        temp_dict = {}S
         temp_dict["min"] = result.min
         temp_dict["max"] = result.max
         temp_dict["avg"] = result.avg
+        temp_data.append(temp_dict)
 
+    # Return the JSON representation of your dictionary
+    return jsonify(measurement_data)
 
 if __name__ == "__main__":
     app.run(debug=True)
