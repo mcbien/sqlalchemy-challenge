@@ -36,12 +36,13 @@ app = Flask(__name__)
 def home():
     print("available routes")
     return (
-        f"Bien: sqlalchemy-challenge<br/><br/>"
-        f"Available Routes:<br/>"
-        f"Precipitation >> /api/v1.0/precipitation<br/>"
-        f"Stations >> /api/v1.0/stations<br/>"
-        f"Tobs>> /api/v1.0/tobs<br/>"
-        f"/api/v1.0/start date/end_date     Note: Date format is YYY-MM-DD"
+        f"Bien: sqlalchemy-challenge<br/><br/><br/>"
+        f"Available Routes:<br/><br/>"
+        f"Precipitation: /api/v1.0/precipitation<br/><br/>"
+        f"Stations: /api/v1.0/stations<br/><br/>"
+        f"Tobs: /api/v1.0/tobs<br/><br/>"
+        f"Start Date End Date /api/v1.0/start_date/end_date<br/><br/>"
+        f"Note: Date format is YYY-MM-DD"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -60,7 +61,7 @@ def precipitation():
     measurement_data = []
     for dates in results:
         measurement_dict = {}
-        mesurement_dict[dates.date] = dates.prcp
+        measurement_dict[dates.date] = dates.prcp
         # measurement_dict["date"] = dates.date
         # measurement_dict["prcp"] = dates.prcp
         measurement_data.append(measurement_dict)
@@ -94,47 +95,53 @@ def stations():
 @app.route("/api/v1.0/tobs")
 def tobs():
 
-# open communication session with database
+    # open communication session with database
     session = Session(engine)
 
-    # query measurement.date and measurement.prcp for last year
-    stations = session.query(measurement.station,func.count(measurement.station)).group_by(measurement.station).order_by(func.count(measurement.station).desc())
-    
-    # close the session
+    # query tobs for the most active station for the past year
+    one_year_tobs = session.query(measurement.tobs).filter(measurement.date >= "2016-08-23").filter(measurement.station == "USC00519281").all()
+
+    # close session
     session.close()
 
+    # return the JSON representation of dictionary
+    return jsonify(one_year_tobs)
 
-@app.route("/api/v1.0/temps/<start>")
-@app.route("/api/v1.0/temps/<start>/<end>")
+
+@app.route('/api/v1.0/<start_date>')
+@app.route('/api/v1.0/<start_date>/<end_date>')
 
 def start(start_date=None, end_date=None):
 
-    ## open communication session with database
+    # open cummunication session with database
     session = Session(engine)
-    
-    # query measurement.date and measurement.prcp for last year
-    if end_date:
-        results = session.query(func.min(Measuremrnt.tobs).label("min"), func.max(Measurement.tobs).label("max"), func.avg(Measurement.tobs).label("avg")).\
-            filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).all()
-    
-    else:
-        results = session.query((func.min(Measuremrnt.tobs).label("min", func.max(Measurement.tobs).label("max"), func.avg(Measurement.tobs).label("avg")).\
-            filter(Measurement.date >= start_date).all()
 
-    # close the session
+    # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
+    if end_date is None:
+        results = session.query(func.min(measurement.tobs).label("TMIN"), func.max(measurement.tobs).label("TMAX"), func.avg(measurement.tobs).label("TAVG")).filter(measurement.date >= start_date).all()
+
+    else:
+        results = session.query(func.min(measurement.tobs).label("TMIN"), func.max(measurement.tobs).label("TMAX"), func.avg(measurement.tobs).label("TAVG")).filter(measurement.date >= start_date).filter(measurement.date <= end_date).all()
+
+    #close the session
     session.close()
 
-    # for loop to pull results for dates provided
     temp_data = []
-    for result in results:
-        temp_dict = {}S
-        temp_dict["min"] = result.min
-        temp_dict["max"] = result.max
-        temp_dict["avg"] = result.avg
+    for temp in results:
+        temp_dict = {}
+        temp_dict["TMIN"] = temp.TMIN
+        temp_dict["TMAX"] = temp.TMAX
+        temp_dict["TAVG"] = temp.TAVG
         temp_data.append(temp_dict)
 
-    # Return the JSON representation of your dictionary
-    return jsonify(measurement_data)
+    # return the JSON representation of dictionary
+    return jsonify(temp_data)
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
