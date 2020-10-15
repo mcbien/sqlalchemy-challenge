@@ -41,7 +41,7 @@ def home():
         f"Precipitation: /api/v1.0/precipitation<br/><br/>"
         f"Stations: /api/v1.0/stations<br/><br/>"
         f"Tobs: /api/v1.0/tobs<br/><br/>"
-        f"Start Date End Date /api/v1.0/start_date/end_date<br/><br/>"
+        f"Start Date End Date: /api/v1.0/start_date/end_date<br/><br/>"
         f"Note: Date format is YYY-MM-DD"
     )
 
